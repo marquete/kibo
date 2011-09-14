@@ -31,12 +31,19 @@ A `lastKey` method is provided for querying Kibo about which key was involved in
 ## Supported keys ##
 
 Kibo understands these keys and is case-insensitive about their spelling:
+
 - modifiers `shift`, `ctrl`, `alt`
+
 - letters `a` to `z`
+
 - numbers `0` to `9`
+
 - functions `f1` to `f12`
+
 - arrows `left`, `up`, `right` and `down`
+
 - `enter`, `esc`, `space`, `backspace`, `delete`, `insert`, `tab`, `page_up`, `page_down`, `home`, `end`, `caps_lock`, `num_lock`
+
 - wildcards `any`, `any arrow`, `any number`, `any letter`, `any f`
 
 ## Examples ##
@@ -44,7 +51,7 @@ Kibo understands these keys and is case-insensitive about their spelling:
 ### Single or multiple key combinations ###
 
 ```javascript
-var k = (new Kibo()).down(['up', 'down'], function(e) {
+var k = (new Kibo()).down(['up', 'down'], function() {
   console.log('up or down arrow key pressed');
 }).up('tab', function() {
   console.log('TAB key released');
