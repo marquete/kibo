@@ -35,6 +35,22 @@ Kibo.WILDCARDS = {
   f: [112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123]
 };
 
+Kibo.assert = function(expression, exception) {
+  exception = exception || {};
+  exception.name = exception.name || 'Exception raised';
+  exception.message = exception.message || 'an error has occurred.';
+
+  try {
+    if(!expression)
+      throw(exception);
+  } catch(error) {
+    if((typeof console !== 'undefined') && console.log)
+      console.log(error.name + ': ' + error.message);
+    else
+      window.alert(error.name + ': ' + error.message);
+  }
+};
+
 Kibo.registerEvent = (function() {
   if(document.addEventListener) {
     return function(element, eventName, func) {
@@ -133,11 +149,13 @@ Kibo.prototype.matchingKeys = function(registeredKeys) {
   for(registeredKey in registeredKeys) {
     if(Object.prototype.hasOwnProperty.call(registeredKeys, registeredKey)) {
       keyCombination = Kibo.trimString(registeredKey).split(' ');
-      match = true;
-      for(j = 0; j < keyCombination.length; j++)
-        match = match && (Kibo.isModifier(keyCombination[j]) ? this.lastKey(keyCombination[j]) : (this.lastKey() === keyCombination[j]));
-      if(match)
-        result.push(registeredKey);
+      if(keyCombination.length && keyCombination[0] !== 'any') {
+        match = true;
+        for(j = 0; j < keyCombination.length; j++)
+          match = match && (Kibo.isModifier(keyCombination[j]) ? this.lastKey(keyCombination[j]) : (this.lastKey() === keyCombination[j]));
+        if(match)
+          result.push(registeredKey);
+      }
     }
   }
   return result;
@@ -183,12 +201,10 @@ Kibo.prototype.registerKeys = function(upOrDown, newKeys, func) {
     newKeys = [newKeys];
 
   for(i = 0; i < newKeys.length; i++) {
-    try {
-      if(!Kibo.isString(newKeys[i]))
-        throw { name: 'Type error', message: 'expected string or array of strings' };
-    } catch(exception) {
-      alert(exception.name + ': ' + exception.message + '.');
-    }
+    Kibo.assert(
+      Kibo.isString(newKeys[i]),
+      { name: 'Type error', message: 'expected string or array of strings.' }
+    );
 
     newKeys[i] = Kibo.neatString(newKeys[i]);
 
@@ -208,12 +224,10 @@ Kibo.prototype.unregisterKeys = function(upOrDown, newKeys, func) {
     newKeys = [newKeys];
 
   for(i = 0; i < newKeys.length; i++) {
-    try {
-      if(!Kibo.isString(newKeys[i]))
-        throw { name: 'Type error', message: 'expected string or array of strings' };
-    } catch(exception) {
-      alert(exception.name + ': ' + exception.message + '.');
-    }
+    Kibo.assert(
+      Kibo.isString(newKeys[i]),
+      { name: 'Type error', message: 'expected string or array of strings.' }
+    );
 
     newKeys[i] = Kibo.neatString(newKeys[i]);
 
@@ -249,11 +263,11 @@ Kibo.prototype.lastKey = function(modifier) {
   if(!modifier)
     return Kibo.keyName(this.lastKeyCode);
 
-  try {
-    if(!Kibo.arrayIncludes(Kibo.MODIFIERS, modifier))
-      throw { name: 'Kibo modifier error', message: 'invalid modifier ' + modifier + ' (valid modifiers are: ' + Kibo.MODIFIERS.join(', ') + ')' };
-  } catch(exception) {
-    alert(exception.name + ': ' + exception.message + '.');
-  }
+  Kibo.assert(
+    Kibo.arrayIncludes(Kibo.MODIFIERS, modifier),
+    { name: 'Modifier error', message: 'invalid modifier ' + modifier + ' (valid modifiers are: ' + Kibo.MODIFIERS.join(', ') + ').' }
+  );
+
   return this.lastModifiers[modifier];
 };
+
