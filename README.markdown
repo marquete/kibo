@@ -16,11 +16,11 @@ Then set up an event listener by creating an instance of Kibo:
 var k = new Kibo();
 ```
 
-Kibo's constructor takes an optional argument - the HTML element on which you want to define the event handler. It defaults to `window.document`.
+Kibo's constructor takes an optional argument - the HTML element on which you want to define the event handler. It should be an `input`, `textarea` or `select` element and defaults to `window.document`.
 
 ## Syntax and usage ##
 
-Two short-hand methods are provided - `down` and `up`, which take two arguments: one or more key combinations or wildcards, and a function to invoke when a matching event is fired on the element.
+Two shorthand methods are provided - `down` and `up`, which take two arguments: one or more key combinations or wildcards, and a function to invoke when a matching event is fired on the element. The shorthand methods can be chained.
 
 A key combination is a string consisting of zero or more modifiers and a key name or, alternatively, one or more modifiers. You can pass the short-hand methods a single key combination or an array of one or more key combinations.
 
@@ -40,7 +40,7 @@ Kibo understands these keys and is case-insensitive about their spelling:
 
 - functions `f1` to `f12`
 
-- arrows `left`, `up`, `right` and `down`
+- arrows `left`, `up`, `right`, `down`
 
 - `enter`, `esc`, `space`, `backspace`, `delete`, `insert`, `tab`, `page_up`, `page_down`, `home`, `end`, `caps_lock`, `num_lock`
 
@@ -48,10 +48,14 @@ Kibo understands these keys and is case-insensitive about their spelling:
 
 ## Examples ##
 
+```javascript
+var k = new Kibo();
+```
+
 ### Single or multiple key combinations ###
 
 ```javascript
-var k = (new Kibo()).down(['up', 'down'], function() {
+k.down(['up', 'down'], function() {
   console.log('up or down arrow key pressed');
 }).up('tab', function() {
   console.log('TAB key released');
@@ -61,9 +65,9 @@ var k = (new Kibo()).down(['up', 'down'], function() {
 ### Key combinations with modifiers ###
 
 ```javascript
-var k = new Kibo(), handler = function() {
+function handler() {
   console.log('last key: ' + k.lastKey());
-};
+}
 
 k.down(['shift q', 'ctrl alt x'], handler);
 ```
@@ -71,7 +75,7 @@ k.down(['shift q', 'ctrl alt x'], handler);
 ### Wildcards ###
 
 ```javascript
-var k = (new Kibo()).down(['any letter', 'any number'], function() {
+k.down(['any letter', 'any number'], function() {
   console.log('letter or number key pressed');
   console.log('shift key was' + (k.lastKey('shift') ? '' : ' not') + ' pressed');
 });
@@ -84,7 +88,7 @@ k.up('any', function() {
 ### Preventing the default action ###
 
 ```javascript
-var k = (new Kibo()).down('f5', function() { return false; });
+k.down('f5', function() { return false; });
 ```
 
 ## License ##
