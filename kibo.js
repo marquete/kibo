@@ -179,7 +179,7 @@ Kibo.prototype.handler = function(upOrDown) {
 
     for(i = 0; i < registeredKeys.any.length; i++)
       if((registeredKeys.any[i](e) === false) && e.preventDefault)
-        e.preventDefault;
+        e.preventDefault();
 
     for(i = 0; i < Kibo.WILDCARD_TYPES.length; i++)
       if(Kibo.arrayIncludes(Kibo.WILDCARDS[Kibo.WILDCARD_TYPES[i]], that.lastKeyCode))
