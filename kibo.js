@@ -212,9 +212,9 @@ Kibo.prototype.registerKeys = function(upOrDown, newKeys, func) {
       registeredKeys[newKeys[i]].push(func);
     else
       registeredKeys[newKeys[i]] = [func];
-  }
+    }
 
-  return this;
+    return this;
 };
 
 Kibo.prototype.unregisterKeys = function(upOrDown, newKeys, func) {
@@ -231,24 +231,32 @@ Kibo.prototype.unregisterKeys = function(upOrDown, newKeys, func) {
 
     newKeys[i] = Kibo.neatString(newKeys[i]);
 
-    if(Kibo.isArray(registeredKeys[newKeys[i]]))
-      for(j = 0; j < registeredKeys[newKeys[i]].length; j++) {
-        if(String(registeredKeys[newKeys[i]][j]) === String(func)) {
-          registeredKeys[newKeys[i]].splice(j, 1);
-          break;
+    if(func === null)
+      delete registeredKeys[newKeys[i]];
+    else {
+      if(Kibo.isArray(registeredKeys[newKeys[i]])) {
+        for(j = 0; j < registeredKeys[newKeys[i]].length; j++) {
+          if(String(registeredKeys[newKeys[i]][j]) === String(func)) {
+            registeredKeys[newKeys[i]].splice(j, 1);
+            break;
+          }
         }
       }
+    }
   }
 
   return this;
 };
 
+Kibo.prototype.delegate = function(action, keys, func) {
+  return func !== null ? this.registerKeys(action, keys, func) : this.unregisterKeys(action, keys, func);
+};
 Kibo.prototype.down = function(keys, func) {
-  return this.registerKeys('down', keys, func);
+  return this.delegate('down', keys, func);
 };
 
 Kibo.prototype.up = function(keys, func) {
-  return this.registerKeys('up', keys, func);
+  return this.delegate('up', keys, func);
 };
 
 Kibo.keyName = function(keyCode) {
