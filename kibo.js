@@ -20,9 +20,11 @@ Kibo.KEY_NAMES_BY_CODE = {
 };
 
 Kibo.KEY_CODES_BY_NAME = {};
-for(var key in Kibo.KEY_NAMES_BY_CODE)
-  if(Object.prototype.hasOwnProperty.call(Kibo.KEY_NAMES_BY_CODE, key))
+(function() {
+for (var key in Kibo.KEY_NAMES_BY_CODE)
+  if (Object.prototype.hasOwnProperty.call(Kibo.KEY_NAMES_BY_CODE, key))
     Kibo.KEY_CODES_BY_NAME[Kibo.KEY_NAMES_BY_CODE[key]] = +key;
+})();
 
 Kibo.MODIFIERS = ['shift', 'ctrl', 'alt'];
 
