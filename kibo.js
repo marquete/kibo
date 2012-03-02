@@ -146,7 +146,7 @@ Kibo.prototype.initialize = function() {
 
 Kibo.prototype.matchingKeys = function(registeredKeys) {
   var i, j, keyCombination, match, result = [];
-  for(registeredKey in registeredKeys) {
+  for(var registeredKey in registeredKeys) {
     if(Object.prototype.hasOwnProperty.call(registeredKeys, registeredKey)) {
       keyCombination = Kibo.trimString(registeredKey).split(' ');
       if(keyCombination.length && keyCombination[0] !== 'any') {
