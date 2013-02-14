@@ -93,5 +93,5 @@ k.down('f5', function() { return false; });
 
 ## License ##
 
-Kibo is released under the MIT License.
+Kibo is released under the [MIT License](http://opensource.org/licenses/MIT). Copyright (c) 2013 [marquete](https://github.com/marquete).
 
