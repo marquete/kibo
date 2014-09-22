@@ -37,22 +37,6 @@ Kibo.WILDCARDS = {
   f: [112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123]
 };
 
-Kibo.assert = function(expression, exception) {
-  exception = exception || {};
-  exception.name = exception.name || 'Exception raised';
-  exception.message = exception.message || 'an error has occurred.';
-
-  try {
-    if(!expression)
-      throw(exception);
-  } catch(error) {
-    if((typeof console !== 'undefined') && console.log)
-      console.log(error.name + ': ' + error.message);
-    else
-      window.alert(error.name + ': ' + error.message);
-  }
-};
-
 Kibo.registerEvent = (function() {
   if(document.addEventListener) {
     return function(element, eventName, func) {
@@ -97,10 +81,6 @@ Kibo.capitalize = function(string) {
 
 Kibo.isArray = function(what) {
   return Kibo.stringContains(Object.prototype.toString.call(what), 'Array');
-};
-
-Kibo.isString = function(what) {
-  return Kibo.stringContains(Object.prototype.toString.call(what), 'String');
 };
 
 Kibo.arrayIncludes = (function() {
@@ -223,11 +203,6 @@ Kibo.prototype.registerKeys = function(upOrDown, newKeys, func) {
     newKeys = [newKeys];
 
   for(i = 0; i < newKeys.length; i++) {
-    Kibo.assert(
-      Kibo.isString(newKeys[i]),
-      { name: 'Type error', message: 'expected string or array of strings.' }
-    );
-
     if(!Kibo.stringContains(newKeys[i], 'any'))
       newKeys[i] = Kibo.modifiersAndKey(newKeys[i]);
 
@@ -247,18 +222,13 @@ Kibo.prototype.unregisterKeys = function(upOrDown, newKeys, func) {
     newKeys = [newKeys];
 
   for(i = 0; i < newKeys.length; i++) {
-    Kibo.assert(
-      Kibo.isString(newKeys[i]),
-      { name: 'Type error', message: 'expected string or array of strings.' }
-    );
-
     if(!Kibo.stringContains(newKeys[i], 'any'))
       newKeys[i] = Kibo.modifiersAndKey(newKeys[i]);
 
     if(func === null)
       delete registeredKeys[newKeys[i]];
     else {
-      if(Kibo.isArray(registeredKeys[newKeys[i]])) {
+      if(registeredKeys[newKeys[i]]) {
         for(j = 0; j < registeredKeys[newKeys[i]].length; j++) {
           if(String(registeredKeys[newKeys[i]][j]) === String(func)) {
             registeredKeys[newKeys[i]].splice(j, 1);
@@ -287,11 +257,6 @@ Kibo.prototype.up = function(keys, func) {
 Kibo.prototype.lastKey = function(modifier) {
   if(!modifier)
     return Kibo.keyName(this.lastKeyCode);
-
-  Kibo.assert(
-    Kibo.arrayIncludes(Kibo.MODIFIERS, modifier),
-    { name: 'Modifier error', message: 'invalid modifier ' + modifier + ' (valid modifiers are: ' + Kibo.MODIFIERS.join(', ') + ').' }
-  );
 
   return this.lastModifiers[modifier];
 };
