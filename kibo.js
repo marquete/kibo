@@ -21,9 +21,9 @@ Kibo.KEY_NAMES_BY_CODE = {
 
 Kibo.KEY_CODES_BY_NAME = {};
 (function() {
-for (var key in Kibo.KEY_NAMES_BY_CODE)
-  if (Object.prototype.hasOwnProperty.call(Kibo.KEY_NAMES_BY_CODE, key))
-    Kibo.KEY_CODES_BY_NAME[Kibo.KEY_NAMES_BY_CODE[key]] = +key;
+  for(var key in Kibo.KEY_NAMES_BY_CODE)
+    if(Object.prototype.hasOwnProperty.call(Kibo.KEY_NAMES_BY_CODE, key))
+      Kibo.KEY_CODES_BY_NAME[Kibo.KEY_NAMES_BY_CODE[key]] = +key;
 })();
 
 Kibo.MODIFIERS = ['shift', 'ctrl', 'alt'];
@@ -79,12 +79,28 @@ Kibo.unregisterEvent = (function() {
   }
 })();
 
+Kibo.stringContains = function(string, substring) {
+  return string.indexOf(substring) !== -1;
+};
+
+Kibo.trimString = function(string) {
+  return string.replace(/^\s+|\s+$/g, '');
+};
+
+Kibo.neatString = function(string) {
+  return Kibo.trimString(string).replace(/\s+/g, ' ');
+};
+
+Kibo.capitalize = function(string) {
+  return string.toLowerCase().replace(/^./, function(match) { return match.toUpperCase(); });
+};
+
 Kibo.isArray = function(what) {
-  return !!(what && what.splice);
+  return Kibo.stringContains(Object.prototype.toString.call(what), 'Array');
 };
 
 Kibo.isString = function(what) {
-  return typeof what === 'string';
+  return Kibo.stringContains(Object.prototype.toString.call(what), 'String');
 };
 
 Kibo.arrayIncludes = (function() {
@@ -103,20 +119,41 @@ Kibo.arrayIncludes = (function() {
   }
 })();
 
-Kibo.trimString = function(string) {
-  return string.replace(/^\s+|\s+$/g, '');
+Kibo.extractModifiers = function(keyCombination) {
+  var modifiers, i
+  modifiers = [];
+  for(i = 0; i < Kibo.MODIFIERS.length; i++)
+    if(Kibo.stringContains(keyCombination, Kibo.MODIFIERS[i]))
+      modifiers.push(Kibo.MODIFIERS[i]);
+  return modifiers;
+}
+
+Kibo.extractKey = function(keyCombination) {
+  var keys, i;
+  keys = Kibo.neatString(keyCombination).split(' ');
+  for(i = 0; i < keys.length; i++)
+    if(!Kibo.arrayIncludes(Kibo.MODIFIERS, keys[i]))
+      return keys[i];
 };
 
-Kibo.neatString = function(string) {
-  return Kibo.trimString(string).replace(/\s+/g, ' ');
+Kibo.modifiersAndKey = function(keyCombination) {
+  var result, key;
+
+  result = Kibo.extractModifiers(keyCombination);
+
+  key = Kibo.extractKey(keyCombination);
+  if(key && !Kibo.arrayIncludes(Kibo.MODIFIERS, key))
+    result.push(key);
+
+  return result.join(' ');
+}
+
+Kibo.keyName = function(keyCode) {
+  return Kibo.KEY_NAMES_BY_CODE[keyCode + ''];
 };
 
-Kibo.capitalize = function(string) {
-  return string.toLowerCase().replace(/^./, function(match) { return match.toUpperCase(); });
-};
-
-Kibo.isModifier = function(key) {
-  return Kibo.arrayIncludes(Kibo.MODIFIERS, key);
+Kibo.keyCode = function(keyName) {
+  return +Kibo.KEY_CODES_BY_NAME[keyName];
 };
 
 Kibo.prototype.initialize = function() {
@@ -146,27 +183,10 @@ Kibo.prototype.initialize = function() {
   });
 };
 
-Kibo.prototype.matchingKeys = function(registeredKeys) {
-  var i, j, keyCombination, match, result = [];
-  for(var registeredKey in registeredKeys) {
-    if(Object.prototype.hasOwnProperty.call(registeredKeys, registeredKey)) {
-      keyCombination = Kibo.trimString(registeredKey).split(' ');
-      if(keyCombination.length && keyCombination[0] !== 'any') {
-        match = true;
-        for(j = 0; j < keyCombination.length; j++)
-          match = match && (Kibo.isModifier(keyCombination[j]) ? this.lastKey(keyCombination[j]) : (this.lastKey() === keyCombination[j]));
-        if(match)
-          result.push(registeredKey);
-      }
-    }
-  }
-  return result;
-};
-
 Kibo.prototype.handler = function(upOrDown) {
   var that = this;
   return function(e) {
-    var i, j, matchingKeys, registeredKeys;
+    var i, j, registeredKeys, lastModifiersAndKey;
 
     e = e || window.event;
 
@@ -177,7 +197,6 @@ Kibo.prototype.handler = function(upOrDown) {
       that.lastModifiers[Kibo.keyName(that.lastKeyCode)] = true;
 
     registeredKeys = that['keys' + Kibo.capitalize(upOrDown)];
-    matchingKeys = that.matchingKeys(registeredKeys);
 
     for(i = 0; i < registeredKeys.any.length; i++)
       if((registeredKeys.any[i](e) === false) && e.preventDefault)
@@ -189,9 +208,10 @@ Kibo.prototype.handler = function(upOrDown) {
           if((registeredKeys['any ' + Kibo.WILDCARD_TYPES[i]][j](e) === false) && e.preventDefault)
             e.preventDefault();
 
-    for(i = 0; i < matchingKeys.length; i++)
-      for(j = 0; j < registeredKeys[matchingKeys[i]].length; j++)
-        if((registeredKeys[matchingKeys[i]][j](e) === false) && e.preventDefault)
+    lastModifiersAndKey = that.lastModifiersAndKey();
+    if(registeredKeys[lastModifiersAndKey])
+      for(i = 0; i < registeredKeys[lastModifiersAndKey].length; i++)
+        if((registeredKeys[lastModifiersAndKey][i](e) === false) && e.preventDefault)
           e.preventDefault();
   };
 };
@@ -208,15 +228,16 @@ Kibo.prototype.registerKeys = function(upOrDown, newKeys, func) {
       { name: 'Type error', message: 'expected string or array of strings.' }
     );
 
-    newKeys[i] = Kibo.neatString(newKeys[i]);
+    if(!Kibo.stringContains(newKeys[i], 'any'))
+      newKeys[i] = Kibo.modifiersAndKey(newKeys[i]);
 
-    if(Kibo.isArray(registeredKeys[newKeys[i]]))
+    if(registeredKeys[newKeys[i]])
       registeredKeys[newKeys[i]].push(func);
     else
       registeredKeys[newKeys[i]] = [func];
-    }
+  }
 
-    return this;
+  return this;
 };
 
 Kibo.prototype.unregisterKeys = function(upOrDown, newKeys, func) {
@@ -231,7 +252,8 @@ Kibo.prototype.unregisterKeys = function(upOrDown, newKeys, func) {
       { name: 'Type error', message: 'expected string or array of strings.' }
     );
 
-    newKeys[i] = Kibo.neatString(newKeys[i]);
+    if(!Kibo.stringContains(newKeys[i], 'any'))
+      newKeys[i] = Kibo.modifiersAndKey(newKeys[i]);
 
     if(func === null)
       delete registeredKeys[newKeys[i]];
@@ -250,23 +272,16 @@ Kibo.prototype.unregisterKeys = function(upOrDown, newKeys, func) {
   return this;
 };
 
-Kibo.prototype.delegate = function(action, keys, func) {
-  return func !== null ? this.registerKeys(action, keys, func) : this.unregisterKeys(action, keys, func);
+Kibo.prototype.delegate = function(upOrDown, keys, func) {
+  return func !== null ? this.registerKeys(upOrDown, keys, func) : this.unregisterKeys(upOrDown, keys, func);
 };
+
 Kibo.prototype.down = function(keys, func) {
   return this.delegate('down', keys, func);
 };
 
 Kibo.prototype.up = function(keys, func) {
   return this.delegate('up', keys, func);
-};
-
-Kibo.keyName = function(keyCode) {
-  return Kibo.KEY_NAMES_BY_CODE[keyCode + ''];
-};
-
-Kibo.keyCode = function(keyName) {
-  return +Kibo.KEY_CODES_BY_NAME[keyName];
 };
 
 Kibo.prototype.lastKey = function(modifier) {
@@ -281,3 +296,16 @@ Kibo.prototype.lastKey = function(modifier) {
   return this.lastModifiers[modifier];
 };
 
+Kibo.prototype.lastModifiersAndKey = function() {
+  var result, i;
+
+  result = [];
+  for(i = 0; i < Kibo.MODIFIERS.length; i++)
+    if(this.lastKey(Kibo.MODIFIERS[i]))
+      result.push(Kibo.MODIFIERS[i]);
+
+  if(!Kibo.arrayIncludes(result, this.lastKey()))
+    result.push(this.lastKey());
+
+  return result.join(' ');
+};
