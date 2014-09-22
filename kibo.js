@@ -67,20 +67,16 @@ Kibo.stringContains = function(string, substring) {
   return string.indexOf(substring) !== -1;
 };
 
-Kibo.trimString = function(string) {
-  return string.replace(/^\s+|\s+$/g, '');
-};
-
 Kibo.neatString = function(string) {
-  return Kibo.trimString(string).replace(/\s+/g, ' ');
+  return string.replace(/^\s+|\s+$/g, '').replace(/\s+/g, ' ');
 };
 
 Kibo.capitalize = function(string) {
   return string.toLowerCase().replace(/^./, function(match) { return match.toUpperCase(); });
 };
 
-Kibo.isArray = function(what) {
-  return Kibo.stringContains(Object.prototype.toString.call(what), 'Array');
+Kibo.isString = function(what) {
+  return Kibo.stringContains(Object.prototype.toString.call(what), 'String');
 };
 
 Kibo.arrayIncludes = (function() {
@@ -118,6 +114,10 @@ Kibo.extractKey = function(keyCombination) {
 
 Kibo.modifiersAndKey = function(keyCombination) {
   var result, key;
+
+  if(Kibo.stringContains(keyCombination, 'any')) {
+    return Kibo.neatString(keyCombination).split(' ').slice(0, 2).join(' ');
+  }
 
   result = Kibo.extractModifiers(keyCombination);
 
@@ -197,41 +197,41 @@ Kibo.prototype.handler = function(upOrDown) {
 };
 
 Kibo.prototype.registerKeys = function(upOrDown, newKeys, func) {
-  var i, registeredKeys = this['keys' + Kibo.capitalize(upOrDown)];
+  var i, keys, registeredKeys = this['keys' + Kibo.capitalize(upOrDown)];
 
-  if(!Kibo.isArray(newKeys))
+  if(Kibo.isString(newKeys))
     newKeys = [newKeys];
 
   for(i = 0; i < newKeys.length; i++) {
-    if(!Kibo.stringContains(newKeys[i], 'any'))
-      newKeys[i] = Kibo.modifiersAndKey(newKeys[i]);
+    keys = newKeys[i];
+    keys = Kibo.modifiersAndKey(keys + '');
 
-    if(registeredKeys[newKeys[i]])
-      registeredKeys[newKeys[i]].push(func);
+    if(registeredKeys[keys])
+      registeredKeys[keys].push(func);
     else
-      registeredKeys[newKeys[i]] = [func];
+      registeredKeys[keys] = [func];
   }
 
   return this;
 };
 
 Kibo.prototype.unregisterKeys = function(upOrDown, newKeys, func) {
-  var i, j, registeredKeys = this['keys' + Kibo.capitalize(upOrDown)];
+  var i, j, keys, registeredKeys = this['keys' + Kibo.capitalize(upOrDown)];
 
-  if(!Kibo.isArray(newKeys))
+  if(Kibo.isString(newKeys))
     newKeys = [newKeys];
 
   for(i = 0; i < newKeys.length; i++) {
-    if(!Kibo.stringContains(newKeys[i], 'any'))
-      newKeys[i] = Kibo.modifiersAndKey(newKeys[i]);
+    keys = newKeys[i];
+    keys = Kibo.modifiersAndKey(keys + '');
 
     if(func === null)
-      delete registeredKeys[newKeys[i]];
+      delete registeredKeys[keys];
     else {
-      if(registeredKeys[newKeys[i]]) {
-        for(j = 0; j < registeredKeys[newKeys[i]].length; j++) {
-          if(String(registeredKeys[newKeys[i]][j]) === String(func)) {
-            registeredKeys[newKeys[i]].splice(j, 1);
+      if(registeredKeys[keys]) {
+        for(j = 0; j < registeredKeys[keys].length; j++) {
+          if(String(registeredKeys[keys][j]) === String(func)) {
+            registeredKeys[keys].splice(j, 1);
             break;
           }
         }
